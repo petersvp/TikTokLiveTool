@@ -21,13 +21,21 @@ pending_gifts = []
 pending_actions = []
 
 def preprocess_yaml_string(yaml_str):
-    # Match keys that need quoting and preserve indentation
     def quote_key(match):
         indent = match.group(1)  # Leading spaces
         key = match.group(2)     # The actual key
         return f'{indent}"{key}":'
-    yaml_str = re.sub(r'^(\s*)([^:\s][^:\n]*):', quote_key, yaml_str, flags=re.MULTILINE)
-    return yaml_str
+    
+    # Only process lines that are not comments
+    def process_line(line):
+        if line.strip().startswith('#'):
+            return line
+        return re.sub(r'^(\s*)([^:\s][^:\n]*):', quote_key, line)
+
+    # Apply processing to each line individually
+    yaml_lines = yaml_str.splitlines()
+    processed_lines = [process_line(line) for line in yaml_lines]
+    return '\n'.join(processed_lines)
 
 def open_link(url):
     webbrowser.open(url)
@@ -401,6 +409,7 @@ def load_config():
     try:
         with open("config.cfg", 'r') as file:
             configfile = preprocess_yaml_string(file.read())
+            print(configfile)
             config.update(yaml.safe_load(configfile))
     except Exception as e:
         print(f"Error loading config: {e}")
