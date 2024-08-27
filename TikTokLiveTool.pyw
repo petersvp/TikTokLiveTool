@@ -61,7 +61,7 @@ def on_comment(event: CommentEvent):
         if re.match(pattern.lower(), message.lower()):
             message_queue.put((event.user.nickname, f": {message}"))
             action = get_action(action)
-            #log_action(get_action(action))
+            log_action(event.user, action)
             break
 
 def on_follow(event: FollowEvent):
@@ -69,14 +69,14 @@ def on_follow(event: FollowEvent):
     follow_action = get_action(config['follow'])
     if follow_action:
         message_queue.put((event.user.nickname, " followed the host"))
-        log_action(follow_action)
+        log_action(event.user, follow_action)
 
 def on_share(event: ShareEvent):
     log_share(event.user)
     share_action = get_action(config.get('share', None))
     if share_action:
         message_queue.put((event.user.nickname, " shared the stream"))
-        log_action(share_action)
+        log_action(event.user, share_action)
 
 def on_gift(event: GiftEvent):
     gift_name = event.gift.name.lower()
@@ -101,17 +101,17 @@ def on_gift(event: GiftEvent):
             if event.gift.streakable:
                 message_queue.put((event.user.nickname, f" sent {gift_name} x{event.repeat_count} = {gift_diamonds}💎"))
                 for _ in range(event.repeat_count):
-                    log_action(action)
+                    log_action(event.user, action)
             else:
                 message_queue.put((event.user.nickname, f" sent {gift_name} = {gift_diamonds}💎"))
-                log_action(action)
+                log_action(event.user, action)
 
 def on_subscribe(event: SubscribeEvent):
     user_name = event.user.nickname
     for pattern, action in subscriptions:
         if re.match(pattern, user_name):
             message_queue.put((user_name, " subscribed to the host"))
-            log_action(action)
+            log_action(event.user, action)
             break
 
 def on_emote(event: EmoteChatEvent):
@@ -143,7 +143,7 @@ def process_likes():
                         break
                 if like_action:
                     message_queue.put((data[2].nickname, f" sent {data[0]} likes"))
-                    log_action(like_action)
+                    log_action(data[2], like_action)
                 del user_likes[userid]
                 break 
         
@@ -369,9 +369,9 @@ def log_gift(user, gift_name, diamond_count, quantity):
                              .replace('$quantity', str(quantity)))
         log_entry(formatted_message, pending_gifts, os.path.expanduser(config['output-gift']))
 
-def log_action(action):
+def log_action(user, action):
     global pending_actions
-    log_entry(action, pending_actions, os.path.expanduser(config['output-actions']))
+    log_entry(action.replace('$id', user.display_id).replace('$user', user.nickname), pending_actions, os.path.expanduser(config['output-actions']))
 
 def log_entry(entry, entry_queue, file_name):
     entry_queue.append(entry)
@@ -409,7 +409,7 @@ def load_config():
     try:
         with open("config.cfg", 'r') as file:
             configfile = preprocess_yaml_string(file.read())
-            print(configfile)
+            # print(configfile)
             config.update(yaml.safe_load(configfile))
     except Exception as e:
         print(f"Error loading config: {e}")
