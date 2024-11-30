@@ -186,7 +186,7 @@ pyinstaller --onefile --windowed --icon=icon.ico --add-data=icon.ico:. TikTokLiv
 
 After the build process completes, you will find `TikTokLiveTool.exe` in the dist directory inside your project folder.
 
-### That's all of it
+### That's all of it!
 
 If you like this tool and want to support my work, go check out my [Steam Store Page](https://store.steampowered.com/pub/pidev) and [my game, ColorBlend FX: Desaturation](https://store.steampowered.com/app/670510/ColorBlend_FX_Desaturation/). You can also check my social media.
 
